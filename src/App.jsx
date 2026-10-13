@@ -9,6 +9,8 @@ export function App() {
   const [ate, setAte] = useState('2026-10-31');
 
   const lista = listarTarefas({ tarefas, empresas, empresaId, de, ate });
+  const periodoInvertido = Boolean(de && ate && de > ate);
+  const dataBR = (d) => d.split('-').reverse().join('/');
 
   return (
     <main style={{ fontFamily: 'system-ui', maxWidth: 720, margin: '32px auto', padding: '0 16px' }}>
@@ -19,10 +21,14 @@ export function App() {
             <option key={e.id} value={e.id}>{e.nome}</option>
           ))}
         </select>
-        <label>De <input type="date" value={de} onChange={(e) => setDe(e.target.value)} /></label>
-        <label>Até <input type="date" value={ate} onChange={(e) => setAte(e.target.value)} /></label>
+        <label>De <input type="date" value={de} max={ate || undefined} onChange={(e) => setDe(e.target.value)} /></label>
+        <label>Até <input type="date" value={ate} min={de || undefined} onChange={(e) => setAte(e.target.value)} /></label>
       </div>
-      {lista.length === 0 ? (
+      {periodoInvertido ? (
+        <p role="alert">
+          A data inicial ({dataBR(de)}) é depois da data final ({dataBR(ate)}). Ajuste o período.
+        </p>
+      ) : lista.length === 0 ? (
         <p>Nenhuma tarefa no período.</p>
       ) : (
         <table width="100%" cellPadding={6}>
