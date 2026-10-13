@@ -78,6 +78,12 @@ describe('escrita', () => {
 
   it('não muda a árvore de empresas para passar a enxergar outra', async () => {
     await entrarComo(db, 3);
+    await db.query('update empresas set pai_id = 3 where id = 4').catch(() => {});
+    expect(await idsVisiveis(3)).not.toContain(103);
+  });
+
+  it('não muda a árvore incluindo empresa de fora do grupo', async () => {
+    await entrarComo(db, 3);
     await db.query('update empresas set pai_id = 3 where id = 5').catch(() => {});
     await db.query("insert into empresas values (99, 'Fantasma', 3)").catch(() => {});
     expect(await idsVisiveis(3)).toEqual(VISIVEIS[3]);
@@ -85,5 +91,49 @@ describe('escrita', () => {
     await entrarComo(db, 1);
     const r = await db.query('select id, pai_id from empresas where id in (5, 99) order by id');
     expect(r.rows).toEqual([{ id: 5, pai_id: null }]);
+  });
+});
+
+// Empresas irmãs: a Vértice (3) e a Aurora Campo (4) estão no mesmo grupo,
+// mas a Aurora Campo fica abaixo da Aurora Serviços, não da Vértice.
+describe('Vértice Finanças (3) tentando acessar a Aurora Campo (4)', () => {
+  const DA_AURORA_CAMPO = [103, 104, 109, 113];
+  let original;
+
+  beforeAll(async () => {
+    await entrarComo(db, 4);
+    original = (await db.query('select * from tarefas where id = any($1) order by id', [DA_AURORA_CAMPO])).rows;
+    expect(original.map((t) => t.id)).toEqual(DA_AURORA_CAMPO);
+    await entrarComo(db, 3);
+  });
+
+  it('SELECT não retorna nenhuma tarefa da Aurora Campo', async () => {
+    const porEmpresa = await db.query('select id from tarefas where empresa_id = 4');
+    const porId = await db.query('select id from tarefas where id = 103');
+    expect(porEmpresa.rows).toEqual([]);
+    expect(porId.rows).toEqual([]);
+  });
+
+  it('UPDATE não altera nenhuma tarefa da Aurora Campo', async () => {
+    const r = await db.query("update tarefas set status = 'concluida', titulo = 'invadido' where empresa_id = 4");
+    expect(r.affectedRows).toBe(0);
+  });
+
+  it('INSERT de tarefa na Aurora Campo é recusado', async () => {
+    await expect(
+      db.query("insert into tarefas values (950, 4, 'intrusa', 'aberta', '2026-10-01')"),
+    ).rejects.toThrow(/row-level security/);
+  });
+
+  it('DELETE não apaga nenhuma tarefa da Aurora Campo', async () => {
+    const r = await db.query('delete from tarefas where empresa_id = 4');
+    expect(r.affectedRows).toBe(0);
+  });
+
+  it('as tarefas da Aurora Campo continuam intactas', async () => {
+    await entrarComo(db, 4);
+    const agora = await db.query('select * from tarefas where id = any($1) order by id', [DA_AURORA_CAMPO]);
+    expect(agora.rows).toEqual(original);
+    expect((await db.query('select id from tarefas where id = 950')).rows).toEqual([]);
   });
 });
