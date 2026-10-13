@@ -94,46 +94,86 @@ describe('escrita', () => {
   });
 });
 
-// Empresas irmãs: a Vértice (3) e a Aurora Campo (4) estão no mesmo grupo,
-// mas a Aurora Campo fica abaixo da Aurora Serviços, não da Vértice.
-describe('Vértice Finanças (3) tentando acessar a Aurora Campo (4)', () => {
-  const DA_AURORA_CAMPO = [103, 104, 109, 113];
-  let original;
 
-  beforeAll(async () => {
+// Tentativas de acesso entre empresas do mesmo grupo que NÃO estão uma
+// abaixo da outra. Para cada uma: SELECT, UPDATE, INSERT e DELETE devem
+// falhar, e as tarefas da empresa alvo têm de continuar intactas.
+function tentativaDeAcesso({ quem, alvo, novaTarefaId }) {
+  describe(`${quem.nome} (${quem.id}) tentando acessar a ${alvo.nome} (${alvo.id})`, () => {
+    let original;
+
+    beforeAll(async () => {
+      await entrarComo(db, alvo.id);
+      original = (await db.query('select * from tarefas where empresa_id = $1 order by id', [alvo.id])).rows;
+      expect(original.length).toBeGreaterThan(0);
+      await entrarComo(db, quem.id);
+    });
+
+    it(`SELECT não retorna nenhuma tarefa da ${alvo.nome}`, async () => {
+      const porEmpresa = await db.query('select id from tarefas where empresa_id = $1', [alvo.id]);
+      const porId = await db.query('select id from tarefas where id = $1', [original[0].id]);
+      expect(porEmpresa.rows).toEqual([]);
+      expect(porId.rows).toEqual([]);
+    });
+
+    it(`UPDATE não altera nenhuma tarefa da ${alvo.nome}`, async () => {
+      const r = await db.query(
+        "update tarefas set status = 'concluida', titulo = 'invadido' where empresa_id = $1", [alvo.id]);
+      expect(r.affectedRows).toBe(0);
+    });
+
+    it(`INSERT de tarefa na ${alvo.nome} é recusado`, async () => {
+      await expect(
+        db.query("insert into tarefas values ($1, $2, 'intrusa', 'aberta', '2026-10-01')", [novaTarefaId, alvo.id]),
+      ).rejects.toThrow(/row-level security/);
+    });
+
+    it(`DELETE não apaga nenhuma tarefa da ${alvo.nome}`, async () => {
+      const r = await db.query('delete from tarefas where empresa_id = $1', [alvo.id]);
+      expect(r.affectedRows).toBe(0);
+    });
+
+    it(`as tarefas da ${alvo.nome} continuam intactas`, async () => {
+      await entrarComo(db, alvo.id);
+      const agora = await db.query('select * from tarefas where empresa_id = $1 order by id', [alvo.id]);
+      expect(agora.rows).toEqual(original);
+      expect((await db.query('select id from tarefas where id = $1', [novaTarefaId])).rows).toEqual([]);
+    });
+  });
+}
+
+const VERTICE = { id: 3, nome: 'Vértice Finanças' };
+const AURORA_SERVICOS = { id: 2, nome: 'Aurora Serviços' };
+const AURORA_CAMPO = { id: 4, nome: 'Aurora Campo' };
+
+// Ramos diferentes da árvore: a Aurora Campo fica abaixo da Aurora Serviços.
+tentativaDeAcesso({ quem: VERTICE, alvo: AURORA_CAMPO, novaTarefaId: 950 });
+
+// De baixo para cima: estar abaixo de uma empresa não dá acesso a ela.
+tentativaDeAcesso({ quem: AURORA_CAMPO, alvo: AURORA_SERVICOS, novaTarefaId: 951 });
+
+describe('Aurora Campo (4) tentando subir na árvore', () => {
+  const empresasVisiveis = async () =>
+    (await db.query('select distinct empresa_id from tarefas order by empresa_id')).rows.map((t) => t.empresa_id);
+
+  it('não pendura a Aurora Serviços abaixo de si alterando empresas.pai_id', async () => {
     await entrarComo(db, 4);
-    original = (await db.query('select * from tarefas where id = any($1) order by id', [DA_AURORA_CAMPO])).rows;
-    expect(original.map((t) => t.id)).toEqual(DA_AURORA_CAMPO);
-    await entrarComo(db, 3);
-  });
+    await db.query('update empresas set pai_id = 4 where id = 2').catch(() => {});
+    expect(await empresasVisiveis()).toEqual([4]);
 
-  it('SELECT não retorna nenhuma tarefa da Aurora Campo', async () => {
-    const porEmpresa = await db.query('select id from tarefas where empresa_id = 4');
-    const porId = await db.query('select id from tarefas where id = 103');
-    expect(porEmpresa.rows).toEqual([]);
-    expect(porId.rows).toEqual([]);
+    await entrarComo(db, 1);
+    const r = await db.query('select pai_id from empresas where id = 2');
+    expect(r.rows).toEqual([{ pai_id: 1 }]);
   });
+});
 
-  it('UPDATE não altera nenhuma tarefa da Aurora Campo', async () => {
-    const r = await db.query("update tarefas set status = 'concluida', titulo = 'invadido' where empresa_id = 4");
-    expect(r.affectedRows).toBe(0);
-  });
-
-  it('INSERT de tarefa na Aurora Campo é recusado', async () => {
-    await expect(
-      db.query("insert into tarefas values (950, 4, 'intrusa', 'aberta', '2026-10-01')"),
-    ).rejects.toThrow(/row-level security/);
-  });
-
-  it('DELETE não apaga nenhuma tarefa da Aurora Campo', async () => {
-    const r = await db.query('delete from tarefas where empresa_id = 4');
-    expect(r.affectedRows).toBe(0);
-  });
-
-  it('as tarefas da Aurora Campo continuam intactas', async () => {
-    await entrarComo(db, 4);
-    const agora = await db.query('select * from tarefas where id = any($1) order by id', [DA_AURORA_CAMPO]);
-    expect(agora.rows).toEqual(original);
-    expect((await db.query('select id from tarefas where id = 950')).rows).toEqual([]);
+describe('árvore com ciclo', () => {
+  it('não trava a consulta e não vaza para fora do ciclo', async () => {
+    const outro = await montarBanco();
+    // só o dono do banco consegue criar o ciclo 2 → 4 → 2
+    await outro.exec('update empresas set pai_id = 4 where id = 2');
+    await entrarComo(outro, 4);
+    const r = await outro.query('select distinct empresa_id from tarefas order by empresa_id');
+    expect(r.rows.map((t) => t.empresa_id)).toEqual([2, 4]);
   });
 });
