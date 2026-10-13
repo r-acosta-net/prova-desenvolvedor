@@ -1,0 +1,7 @@
+[
+  { "id": 1, "nome": "Grupo Aurora", "pai_id": null },
+  { "id": 2, "nome": "Aurora Serviços", "pai_id": 1 },
+  { "id": 3, "nome": "Vértice Finanças", "pai_id": 1 },
+  { "id": 4, "nome": "Aurora Campo", "pai_id": 2 },
+  { "id": 5, "nome": "Outra Empresa S.A.", "pai_id": null }
+]

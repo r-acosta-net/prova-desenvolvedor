@@ -1,0 +1,17 @@
+[
+  { "id": 101, "empresa_id": 2, "titulo": "Revisar proposta do cliente Almeida", "status": "aberta", "criada_em": "2026-09-01" },
+  { "id": 102, "empresa_id": 2, "titulo": "Enviar contrato de manutenção", "status": "concluida", "criada_em": "2026-09-05" },
+  { "id": 103, "empresa_id": 4, "titulo": "Visita técnica — Rua das Flores, 42", "status": "aberta", "criada_em": "2026-09-10" },
+  { "id": 104, "empresa_id": 4, "titulo": "Manutenção preventiva", "status": "aberta", "criada_em": "2026-09-15" },
+  { "id": 105, "empresa_id": 3, "titulo": "Conciliar extrato de agosto", "status": "concluida", "criada_em": "2026-09-15" },
+  { "id": 106, "empresa_id": 3, "titulo": "Emitir nota fiscal de serviço", "status": "aberta", "criada_em": "2026-09-20" },
+  { "id": 107, "empresa_id": 5, "titulo": "Planejamento trimestral", "status": "aberta", "criada_em": "2026-09-20" },
+  { "id": 108, "empresa_id": 2, "titulo": "Ligar para o fornecedor de materiais", "status": "aberta", "criada_em": "2026-09-30" },
+  { "id": 109, "empresa_id": 4, "titulo": "Instalação de equipamento no cliente", "status": "aberta", "criada_em": "2026-10-01" },
+  { "id": 110, "empresa_id": 3, "titulo": "Fechar folha de setembro", "status": "aberta", "criada_em": "2026-10-01" },
+  { "id": 111, "empresa_id": 5, "titulo": "Renovar seguro da frota", "status": "aberta", "criada_em": "2026-10-02" },
+  { "id": 112, "empresa_id": 2, "titulo": "Treinamento \"Vendas 2026\"; turma 1", "status": "aberta", "criada_em": "2026-10-03" },
+  { "id": 113, "empresa_id": 4, "titulo": "Licença da obra do Centro", "status": "concluida", "criada_em": "2026-10-05" },
+  { "id": 114, "empresa_id": 3, "titulo": "=SOMA(despesas) conferir na auditoria", "status": "aberta", "criada_em": "2026-10-08" },
+  { "id": 115, "empresa_id": 2, "titulo": "Cobrar fatura em aberto há 60 dias", "status": "aberta", "criada_em": "2026-10-10" }
+]
