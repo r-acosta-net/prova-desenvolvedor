@@ -11,9 +11,12 @@
  */
 export function listarTarefas({ tarefas, empresas, empresaId, de, ate }) {
   const visiveis = empresaEDescendentes(empresas, empresaId);
+  // compara só o dia: se criada_em vier com hora ('2026-10-01T10:00'), a
+  // tarefa do último dia do filtro continua entrando
+  const dia = (t) => t.criada_em.slice(0, 10);
   return tarefas
     .filter((t) => visiveis.has(t.empresa_id))
-    .filter((t) => (!de || t.criada_em >= de) && (!ate || t.criada_em <= ate))
+    .filter((t) => (!de || dia(t) >= de) && (!ate || dia(t) <= ate))
     .sort((a, b) => a.criada_em.localeCompare(b.criada_em) || a.id - b.id);
 }
 

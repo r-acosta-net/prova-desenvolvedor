@@ -62,6 +62,16 @@ describe('listarTarefas', () => {
       expect(ids(r)).toEqual([109, 110]);
     });
 
+    it('tarefa com data e hora no último dia do filtro aparece', () => {
+      const comHora = [
+        { id: 1, empresa_id: 2, titulo: 'início', status: 'aberta', criada_em: '2026-09-01T00:00:00' },
+        { id: 2, empresa_id: 2, titulo: 'fim', status: 'aberta', criada_em: '2026-09-30T23:59:59' },
+        { id: 3, empresa_id: 2, titulo: 'depois', status: 'aberta', criada_em: '2026-10-01T00:00:00' },
+      ];
+      const r = listarTarefas({ tarefas: comHora, empresas, empresaId: 2, de: '2026-09-01', ate: '2026-09-30' });
+      expect(ids(r)).toEqual([1, 2]);
+    });
+
     it('"de" depois do "até" não traz nada', () => {
       expect(listarTarefas({ tarefas, empresas, empresaId: 1, de: '2026-10-31', ate: '2026-09-01' })).toEqual([]);
     });
