@@ -154,3 +154,15 @@ describe('npm run feriados (com uma API falsa local)', () => {
     expect(existsSync(join(pasta, 'feriados-2026.json'))).toBe(false);
   });
 });
+
+describe('arquivos versionados em data/', () => {
+  for (const ano of [2026, 2027]) {
+    it(`data/feriados-${ano}.json é válido e veio da BrasilAPI`, () => {
+      const arquivo = JSON.parse(readFileSync(new URL(`../data/feriados-${ano}.json`, import.meta.url), 'utf8'));
+      expect(arquivo.ano).toBe(ano);
+      expect(arquivo.fonte).toBe(`https://brasilapi.com.br/api/feriados/v1/${ano}`);
+      expect(normalizarFeriados(arquivo.feriados, ano)).toEqual(arquivo.feriados);
+      expect(arquivo.feriados.map((f) => f.date)).toEqual(expect.arrayContaining([`${ano}-01-01`, `${ano}-10-12`, `${ano}-11-20`, `${ano}-12-25`]));
+    });
+  }
+});
