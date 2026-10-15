@@ -31,6 +31,13 @@ describe('totalDoDia', () => {
       expect(totalDoDia(vendas, '2026-10-02')).toBe(100);
     });
 
+    it('não depende do fuso da máquina nem de "-3" fixo: acerta datas do antigo horário de verão', () => {
+      // 05/11/2018 Brasília estava em UTC−2: 02:30 UTC = 00:30 do dia 05 (com −3 fixo seria 23:30 do dia 04)
+      const vendas = [venda('A', 100, '2018-11-05T02:30:00Z')];
+      expect(totalDoDia(vendas, '2018-11-05')).toBe(100);
+      expect(totalDoDia(vendas, '2018-11-04')).toBe(0);
+    });
+
     it('venda de madrugada em UTC é da véspera em Brasília', () => {
       const vendas = [venda('A', 600, '2026-10-01T02:00:00Z')]; // 30/09 23:00 em Brasília
       expect(totalDoDia(vendas, '2026-09-30')).toBe(600);
