@@ -12,7 +12,7 @@ export function App() {
   const lista = listarTarefas({ tarefas, empresas, empresaId, de, ate });
 
   return (
-    <main style={{ fontFamily: 'system-ui', maxWidth: 1040, margin: '32px auto', padding: '0 16px' }}>
+    <main style={{ fontFamily: 'system-ui', maxWidth: 720, margin: '32px auto', padding: '0 16px' }}>
       <h1>Tarefas</h1>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <select value={empresaId} onChange={(e) => setEmpresaId(Number(e.target.value))}>

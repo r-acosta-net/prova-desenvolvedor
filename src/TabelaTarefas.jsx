@@ -41,12 +41,16 @@ function tempoRestante(horas) {
   return `${min}min`;
 }
 
-function Farol({ tipo, children }) {
+/** Pílula curta (situação + %) e, embaixo, o detalhe em texto menor. */
+function Farol({ tipo, percentual, detalhe }) {
   const { rotulo, cor, fundo } = FAROL[tipo];
   return (
-    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 999, color: cor, background: fundo, fontWeight: 600, whiteSpace: 'nowrap' }}>
-      {rotulo}{children ? <span style={{ fontWeight: 400 }}> · {children}</span> : null}
-    </span>
+    <>
+      <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 999, color: cor, background: fundo, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}>
+        {rotulo}{percentual != null ? ` ${percentual}%` : ''}
+      </span>
+      {detalhe && <div style={{ fontSize: 12, color: '#4b5563', marginTop: 2, whiteSpace: 'nowrap' }}>{detalhe}</div>}
+    </>
   );
 }
 
@@ -88,8 +92,8 @@ export function LinhasTarefas({ lista }) {
           {sla.erro ? '—'
             : t.status === 'concluida' ? <Farol tipo="concluida" />
             : sla.situacao === 'estourado'
-              ? <Farol tipo="estourado">{sla.diasUteisDeAtraso === 1 ? '1 dia útil' : `${sla.diasUteisDeAtraso} dias úteis`} de atraso</Farol>
-              : <Farol tipo={sla.situacao}>{sla.percentual}% · {tempoRestante(sla.horasRestantes)}</Farol>}
+              ? <Farol tipo="estourado" detalhe={`${sla.diasUteisDeAtraso === 1 ? '1 dia útil' : `${sla.diasUteisDeAtraso} dias úteis`} de atraso`} />
+              : <Farol tipo={sla.situacao} percentual={sla.percentual} detalhe={`faltam ${tempoRestante(sla.horasRestantes)} úteis`} />}
         </td>
       </tr>
     );
