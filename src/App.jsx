@@ -2,6 +2,7 @@ import { useState } from 'react';
 import empresas from '../data/empresas.json';
 import tarefas from '../data/tarefas.json';
 import { listarTarefas } from './tarefas.js';
+import { gerarCSV } from './exportar.js';
 
 export function App() {
   const [empresaId, setEmpresaId] = useState(1);
@@ -12,7 +13,12 @@ export function App() {
 
   return (
     <main style={{ fontFamily: 'system-ui', maxWidth: 720, margin: '32px auto', padding: '0 16px' }}>
-      <h1>Tarefas</h1>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <h1>Tarefas</h1>
+        <button type="button" disabled={lista.length === 0} onClick={() => baixarCSV(lista, `tarefas-${de || 'inicio'}-a-${ate || 'fim'}.csv`)}>
+          Exportar CSV
+        </button>
+      </header>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <select value={empresaId} onChange={(e) => setEmpresaId(Number(e.target.value))}>
           {empresas.map((e) => (
@@ -38,4 +44,15 @@ export function App() {
       )}
     </main>
   );
+}
+
+/** Baixa as tarefas mostradas na tela como CSV para o Excel. */
+function baixarCSV(tarefasDaTela, nomeDoArquivo) {
+  const blob = new Blob([gerarCSV(tarefasDaTela)], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nomeDoArquivo;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0); // depois que o download começou
 }
