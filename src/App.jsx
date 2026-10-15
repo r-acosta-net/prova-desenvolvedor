@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import empresas from '../data/empresas.json';
 import tarefas from '../data/tarefas.json';
+import { CabecalhoTarefas, LegendaSLA, LinhasTarefas } from './TabelaTarefas.jsx';
 import { listarTarefas } from './tarefas.js';
 
 export function App() {
@@ -11,7 +12,7 @@ export function App() {
   const lista = listarTarefas({ tarefas, empresas, empresaId, de, ate });
 
   return (
-    <main style={{ fontFamily: 'system-ui', maxWidth: 720, margin: '32px auto', padding: '0 16px' }}>
+    <main style={{ fontFamily: 'system-ui', maxWidth: 1040, margin: '32px auto', padding: '0 16px' }}>
       <h1>Tarefas</h1>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <select value={empresaId} onChange={(e) => setEmpresaId(Number(e.target.value))}>
@@ -26,13 +27,12 @@ export function App() {
         <p>Nenhuma tarefa no período.</p>
       ) : (
         <table width="100%" cellPadding={6}>
+          <LegendaSLA />
           <thead>
-            <tr><th align="left">Data</th><th align="left">Tarefa</th><th align="left">Status</th></tr>
+            <CabecalhoTarefas />
           </thead>
           <tbody>
-            {lista.map((t) => (
-              <tr key={t.id}><td>{t.criada_em}</td><td>{t.titulo}</td><td>{t.status}</td></tr>
-            ))}
+            <LinhasTarefas lista={lista} />
           </tbody>
         </table>
       )}
