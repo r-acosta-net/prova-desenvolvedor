@@ -5,11 +5,33 @@ const diaEmBrasilia = new Intl.DateTimeFormat('en-CA', {
 });
 
 /**
+ * Garante que `dia` é 'AAAA-MM-DD' e existe no calendário. Dia inválido é
+ * erro: um relatório zerado por engano passaria como verdadeiro.
+ */
+export function validarDia(dia) {
+  const exemplo = 'Use o formato AAAA-MM-DD, ex.: 2026-10-01.';
+  if (typeof dia !== 'string') {
+    throw new TypeError(`Data inválida: ${String(dia)} não é um texto. ${exemplo}`);
+  }
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dia);
+  if (!partes) {
+    throw new RangeError(`Data inválida: ${JSON.stringify(dia)}. ${exemplo}`);
+  }
+  const [ano, mes, d] = partes.slice(1).map(Number);
+  const bissexto = (ano % 4 === 0 && ano % 100 !== 0) || ano % 400 === 0;
+  const diasNoMes = [31, bissexto ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mes - 1];
+  if (ano === 0 || !diasNoMes || d < 1 || d > diasNoMes) {
+    throw new RangeError(`Data inválida: ${JSON.stringify(dia)} não existe no calendário.`);
+  }
+}
+
+/**
  * Vendas pagas de um dia 'YYYY-MM-DD' (horário de Brasília), uma por id.
  * A sincronização de data/vendas.json pode repetir a mesma venda; vale a
  * última ocorrência do id, que é a informação mais recente.
  */
 function vendasPagasDoDia(vendas, dia) {
+  validarDia(dia);
   const porId = new Map(vendas.map((v) => [v.id, v]));
   return [...porId.values()]
     .filter((v) => v.status === 'paga')
