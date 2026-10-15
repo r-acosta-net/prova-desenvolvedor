@@ -56,6 +56,12 @@ describe('gerarCSV: data DD/MM/AAAA', () => {
     expect(l[3]).toBe('30/09/2026');
   });
 
+  it('data fora do formato esperado sai como veio, sem quebrar o arquivo', () => {
+    const linhas = linhasDe([tarefa('x', { criada_em: 'sem data' }), tarefa('y', { id: 2, criada_em: undefined })]);
+    expect(linhas[1]).toEqual(['1', 'x', 'aberta', 'sem data']);
+    expect(linhas[2]).toEqual(['2', 'y', 'aberta', '']);
+  });
+
   it('datas das tarefas reais', () => {
     const [, ...linhas] = linhasDe(tarefas);
     expect(linhas.map((l) => l[3])).toEqual(
